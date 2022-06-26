@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport"/>
+        <link rel="stylesheet" type="text/css" href="style.css">
+    </head>
+    <body>
+        <div id="description">
+            <h1>Clustering Simulator</h1>
+            <p>Welcome to my clustering simulator!</p>
+            <hr>
+        </div>
+        <div id="content"> 
+            <canvas id="clusterCanvas"></canvas>
+            <div id="controls">
+                <h1>Clustering Algorithm</h1>
+                <div id="buttons">
+                    <input type="radio" id="kmeans" name="clustering_algo" value="K-Means">
+                    <label for="kmeans">K-Means</label><br>
+                    <input type="radio" id="dbscan" name="clustering_algo" value="DBScan">
+                    <label for="dbscan">DBScan</label><br>
+                    <input type="radio" id="other" name="clustering_algo" value="other">
+                    <label for="other">other</label>
+                </div>
+                <div id="model-input">
+                    <input type="text" value="text">
+                </div>
+                <div id="general-input">
+                    <button>Run</button>
+                    <button>Clear Screen</button>
+                </div>
+            </div>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>

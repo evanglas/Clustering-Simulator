@@ -1,0 +1,36 @@
+#description {
+    margin-left: 80px;
+    margin-right: 80px;
+    margin-bottom: 30px;
+}
+
+#content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#controls {
+    padding-left: 100px;
+    min-width: 300px;
+}
+
+canvas {
+    margin: 20px;
+    border: 1px solid #d3d3d3;
+    background-color: #000000;
+    width: 800px;
+    height: 600px;
+}
+
+body {
+    margin: 0px;
+    /* display: flex; */
+    justify-content: center;
+    overflow: hidden;
+}
+
+#canvasDiv {
+    display: flex;
+    justify-content: center;
+}
