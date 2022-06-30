@@ -1,3 +1,6 @@
+const canvas = document.getElementById("clusterCanvas");
+const ctx = canvas.getContext("2d");
+
 const runButton = document.getElementById("run-button");
 const clearButton = document.getElementById("clear-button");
 
@@ -28,4 +31,25 @@ function doSomething(e) {
             otherInput.style.display = 'block';
             break;
     }
+}
+
+canvas.height = 300;
+canvas.width = 300;
+
+ctx.fillStyle = '#FF0000';
+ctx.fillRect(0,0,150,75);
+
+canvas.addEventListener('mousedown', function(e) {
+    let rect = e.target.getBoundingClientRect();
+    console.log(e.target.getBoundingClientRect());
+    ctx.beginPath();
+    ctx.arc(e.clientX - rect.left, e.clientY - rect.top, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = "turquoise";
+    ctx.fill();
+    // ctx.strokeStyle = "turquoise";
+    // ctx.stroke();
+})
+
+function clearScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 }

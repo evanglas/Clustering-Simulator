@@ -18,11 +18,12 @@
 canvas {
     margin: 20px;
     border: 1px solid #d3d3d3;
-    background-color: #000000;
+    object-fit: contain;
+    /* background-color: #000000; */
     /* width: 800px;
     height: 600px; */
-    width: 400px;
-    height: 300px;
+    /* width: 400px;
+    height: 300px; */
 }
 
 .model-input {
