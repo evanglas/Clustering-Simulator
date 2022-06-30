@@ -14,20 +14,27 @@
             <canvas id="clusterCanvas"></canvas>
             <div id="controls">
                 <h1>Clustering Algorithm</h1>
-                <div id="buttons">
-                    <input type="radio" id="kmeans" name="clustering_algo" value="K-Means">
+                <div id="modelButtons">
+                    <input type="radio" id="kmeans" name="clustering_algo" value="kmeans">
                     <label for="kmeans">K-Means</label><br>
-                    <input type="radio" id="dbscan" name="clustering_algo" value="DBScan">
+                    <input type="radio" id="dbscan" name="clustering_algo" value="dbscan">
                     <label for="dbscan">DBScan</label><br>
                     <input type="radio" id="other" name="clustering_algo" value="other">
                     <label for="other">other</label>
                 </div>
-                <div id="model-input">
-                    <input type="text" value="text">
+                <div class="model-input" id="kmeans-input">
+                    <input type="number" min="0" step="1" value="1">
+                </div>
+                <div class="model-input" id="dbscan-input">
+                    <input id="eps-input" type="number" value="1">
+                    <input id="minPoints-input" type="number" value="1">
+                </div>
+                <div class="model-input" id="other-input">
+                    <input id="other-iput" type="number" min="0" step="1" value="1">
                 </div>
                 <div id="general-input">
-                    <button>Run</button>
-                    <button>Clear Screen</button>
+                    <button id="run-button">Run</button>
+                    <button id="clear-button">Clear Screen</button>
                 </div>
             </div>
         </div>
