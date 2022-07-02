@@ -3,18 +3,18 @@
     <head>
         <meta name="viewport"/>
         <link rel="stylesheet" type="text/css" href="style.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
     </head>
     <body>
-        <div id="description">
-            <h1>Clustering Simulator</h1>
-            <p>Welcome to my clustering simulator!</p>
-            <hr>
-        </div>
         <div id="content"> 
-            <canvas id="clusterCanvas"></canvas>
             <div id="controls">
-                <h1>Clustering Algorithm</h1>
+                <div id="description">
+                    <p id="title">Clustering Simulator</p> 
+                </div>
                 <div id="modelButtons">
+                    <span style="display: inline-block" id="buttonTitle">Clustering Algorithm</span><br>
                     <input type="radio" id="kmeans" name="clustering_algo" value="kmeans">
                     <label for="kmeans">K-Means</label><br>
                     <input type="radio" id="dbscan" name="clustering_algo" value="dbscan">
@@ -22,22 +22,37 @@
                     <input type="radio" id="other" name="clustering_algo" value="other">
                     <label for="other">other</label>
                 </div>
-                <div class="model-input" id="kmeans-input">
-                    <input type="number" min="0" step="1" value="1">
-                </div>
-                <div class="model-input" id="dbscan-input">
-                    <input id="eps-input" type="number" value="1">
-                    <input id="minPoints-input" type="number" value="1">
-                </div>
-                <div class="model-input" id="other-input">
-                    <input id="other-iput" type="number" min="0" step="1" value="1">
+                <div id="model-inputs">
+                    <div class="model-input" id="kmeans-input">
+                        <div class="param-box">
+                            <label class="param-label" for="num-clusters"># of Clusters</label>
+                            <input id="num-clusters" type="number" min="0" step="1" value="1">
+                        </div>
+                    </div>
+                    <div class="model-input" id="dbscan-input">
+                        <div class="param-box">
+                            <label class="param-label" for="eps-input">EPS</label>
+                            <input class="param-label" id="eps-input" type="number" value="1">
+                        </div>
+                        <div class="param-box">
+                            <label class="param-label" for="minPoints-input">Min Points</label>
+                            <input id="minPoints-input" type="number" value="1">
+                        </div>
+                    </div>
+                    <div class="model-input" id="other-input">
+                        <label class="param-label" for="other-input">Other</label>
+                        <input id="other-iput" type="number" min="0" step="1" value="1">
+                    </div>
                 </div>
                 <div id="general-input">
                     <button id="run-button">Run</button>
                     <button id="clear-button" onclick="clearScreen()">Clear Screen</button>
                 </div>
             </div>
+            <canvas id="clusterCanvas" resize="true"></canvas>
         </div>
+        <script type="text/javascript" src="node_modules/paper/dist/docs/assets/js/paper.js"></script>
         <script src="script.js"></script>
+        <script type="text/paperscript" src="paperscript.js" canvas="clusterCanvas"></script>
     </body>
 </html>

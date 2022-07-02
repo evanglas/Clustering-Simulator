@@ -18,12 +18,13 @@ function doSomething(e) {
         case "kmeans":
             dbscanInput.style.display = 'none';
             otherInput.style.display = 'none';
-            kmeansInput.style.display = 'block';
+            kmeansInput.style.display = 'flex';
             break;
         case "dbscan":
             kmeansInput.style.display = 'none';
             otherInput.style.display = 'none';
-            dbscanInput.style.display = 'block';
+            dbscanInput.style.display = 'flex';
+            dbscanInput.style.flexDirection = 'column';
             break;
         case "other":
             kmeansInput.style.display = 'none';
@@ -33,8 +34,8 @@ function doSomething(e) {
     }
 }
 
-canvas.height = 300;
-canvas.width = 300;
+// canvas.height = 300;
+// canvas.width = 300;
 
 ctx.fillStyle = '#FF0000';
 ctx.fillRect(0,0,150,75);
