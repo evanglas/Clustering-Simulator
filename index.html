@@ -45,14 +45,15 @@
                     </div>
                 </div>
                 <div id="general-input">
-                    <button id="run-button">Run</button>
+                    <button id="run-button" onclick="togglePlay()">Run</button>
+                    <button id="step-button" onclick="step()">Step</button>
                     <button id="clear-button" onclick="clearScreen()">Clear Screen</button>
                 </div>
             </div>
             <canvas id="clusterCanvas" resize="true"></canvas>
         </div>
-        <script type="text/javascript" src="node_modules/paper/dist/docs/assets/js/paper.js"></script>
-        <script src="script.js"></script>
-        <script type="text/paperscript" src="paperscript.js" canvas="clusterCanvas"></script>
+        <script type="text/javascript" src="paper.js"></script>
+        <script type="text/javascript" src="script.js" canvas="clusterCanvas"></script>
+        <!-- <script type="text/paperscript" src="paperscript.js" canvas="clusterCanvas"></script> -->
     </body>
 </html>

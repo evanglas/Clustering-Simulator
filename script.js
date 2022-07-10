@@ -1,7 +1,10 @@
+let colors=['blue', 'red', 'green', 'purple', 'orange', 'cyan', 'gold', 'pink']
+
 const canvas = document.getElementById("clusterCanvas");
 const ctx = canvas.getContext("2d");
 
-const runButton = document.getElementById("run-button");
+const runButton = window.document.getElementById("run-button");
+const stepButton = window.document.getElementById("step-button");
 const clearButton = document.getElementById("clear-button");
 
 const kmeansInput = document.getElementById("kmeans-input");
@@ -34,23 +37,115 @@ function doSomething(e) {
     }
 }
 
-// canvas.height = 300;
-// canvas.width = 300;
+let nums = [0.8, 0.1];
+let clusterPoints = [];
+let centroids = [];
+running = false;
 
-ctx.fillStyle = '#FF0000';
-ctx.fillRect(0,0,150,75);
+class clusterPoint {
+    constructor(point) {
+        pointLayer.activate();
+        this.circle = new paper.Path.Circle(point, 5);
+        this.circle.fillColor = 'black';
+        this.centroid = null;
+    }
+}
 
-canvas.addEventListener('mousedown', function(e) {
-    let rect = e.target.getBoundingClientRect();
-    console.log(e.target.getBoundingClientRect());
-    ctx.beginPath();
-    ctx.arc(e.clientX - rect.left, e.clientY - rect.top, 10, 0, 2 * Math.PI);
-    ctx.fillStyle = "turquoise";
-    ctx.fill();
-    // ctx.strokeStyle = "turquoise";
-    // ctx.stroke();
-})
+class Centroid {
+    constructor(point) {
+        centroidLayer.activate();
+        this.circle = new paper.Path.Circle({center:point, radius:10, opacity:0.5});
+        this.circle.strokeColor = colors[centroids.length % colors.length]
+        this.circle.fillColor = 'white';
+        this.circle.onMouseDrag = function(event) {
+            if (event.modifiers.shift) {
+                this.position = event.point;
+            }
+        }
+    }
+}
+
+paper.setup('clusterCanvas');
+
+const pointLayer = new paper.Layer();
+
+paper.project.addLayer(pointLayer);
+
+const centroidLayer = new paper.Layer();
+
+paper.project.addLayer(centroidLayer);
+
+
+console.log(paper.project.layers);
+
+
+// clusterPoints.push(new paper.Point(3, 9))
+// console.log(clusterPoints[0])
+addStuff()
+
+
+function addStuff() {
+    with (paper) { 
+        var tool = new Tool();
+        tool.fixedDistance = 20;
+        tool.onMouseDown = function(event) {
+            if (!event.modifiers.shift) {
+                var aPoint = new clusterPoint(event.point)
+                clusterPoints.push(aPoint);
+            }
+            // paper.project.activeLayer.insertChild(0, aPoint);
+        }
+        tool.onMouseDrag = function(event) {
+            if (!event.modifiers.shift) {
+                clusterPoints.push(new clusterPoint(event.point));
+            }
+        }
+    }
+}
+
+function togglePlay() {
+    if (running) {
+        runButton.textContent = "Run";
+    } else {
+        runButton.textContent = "Pause";
+    }
+    running = !running;
+}
+
+function step() {
+    addCluster(1);
+}
+
+function removeCluster(amount) {
+    amount = (typeof amount !== 'undefined') ? amount : 1;
+    while (amount > 0 && centroids.length > 0) {
+        centroids.pop()
+        amount--;
+    }
+}
+
+function addCluster(amount) {
+    amount = (typeof amount !== 'undefined') ? amount : 1;
+    while (amount > 0) {
+        y = Math.floor(Math.random() * canvas.clientHeight);
+        x = Math.floor(Math.random() * canvas.clientWidth);
+        centroids.push(new Centroid(new paper.Point(x, y)));
+        amount--;
+    }
+
+}
+
+function drawLine() {
+    var path = new paper.Path();
+    path.strokeColor = 'black';
+    var start = new paper.Point(100, 100);
+    path.moveTo(start);
+    path.lineTo(start.add([ 200, -50 ]));
+    // paper.view.draw();
+}
 
 function clearScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    with(paper) {
+        project.clear()
+    }
 }
