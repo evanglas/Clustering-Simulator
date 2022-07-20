@@ -17,7 +17,7 @@ for(const modelButton of modelButtons){
     modelButton.addEventListener('change', doSomething);
 }
 
-window.addEventListener("contextmenu", function(event){
+canvas.addEventListener("contextmenu", function(event){
         event.stopPropagation();
         event.preventDefault();
         return false;
@@ -50,7 +50,8 @@ function doSomething(e) {
 let nums = [0.8, 0.1];
 let clusterPoints = [];
 let centroids = [];
-running = false;
+let running = false;
+let lastTotalDist = 0;
 
 class clusterPoint {
     constructor(point) {
@@ -114,7 +115,7 @@ function addStuff() {
                 let pointResult = pointLayer.hitTest(event.point, hitOptions);
                 let centroidResult = centroidLayer.hitTest(event.point);
                 if (pointResult) {
-                    console.log(pointResult.item.index);
+                    // console.log(pointResult.item.index);
                     pointResult.item.remove();
                 }
                 if (centroidResult) {
@@ -129,7 +130,7 @@ function addStuff() {
                     clusterPoints.push(aPoint);
                 } else {
                     if (currentAlgo === "kmeans") {
-                        console.log('hi');
+                        // console.log('hi');
                         let hitResult = centroidLayer.hitTest(event.point);
                         if (!hitResult) {
                             centroids.push(new Centroid(event.point));
@@ -144,7 +145,7 @@ function addStuff() {
         }
         tool.onMouseDrag = function(event) {
             if (!event.modifiers.shift && !rightClick) {
-                console.log(event.event);
+                // console.log(event.event);
                 clusterPoints.push(new clusterPoint(event.point));
             } else if (!event.modifiers.shift && rightClick) {
                 let pointResult = pointLayer.hitTest(event.point, hitOptions);
@@ -161,6 +162,34 @@ function addStuff() {
     }
 }
 
+let runningAlgo = false;
+
+function runAlgo() {
+    togglePlay();
+    switch(currentAlgo) {
+        case "kmeans":
+            if (runningAlgo) {
+                runningAlgo = false;
+                clearTimeout(runTimeout);
+            } else {
+                runKmeans();
+            }
+    }
+}
+
+function runKmeans() {
+    runningAlgo = true;
+    totalDist = kmeans_step(1000);
+    runTimeout = setTimeout(runKmeans, 1500);
+    if (Math.abs(lastTotalDist - totalDist) < 10) {
+        clearTimeout(runTimeout);
+        runningAlgo = false;
+        togglePlay();
+    }
+    console.log(Math.abs(lastTotalDist - totalDist));
+    lastTotalDist = totalDist;
+}
+
 function togglePlay() {
     if (running) {
         runButton.textContent = "Run";
@@ -173,13 +202,53 @@ function togglePlay() {
 function step() {
     switch(currentAlgo) {
         case "kmeans":
-            kmeans_step();
+            kmeans_step(1000);
     }
 }
 
-function kmeans_step() {
-    if (centroids.length === 0) {
-
+function kmeans_step(tweenTime) {
+    if (centroidLayer.children.length === 0) {
+        for (const circle of pointLayer.children) {
+            circle.fillColor = "black";
+        }
+    } else if (centroidLayer.children.length === 1) {
+        let fillColor = centroidLayer.children[0].strokeColor;
+        let totalPoint = new paper.Point((0,0));
+        for (const circle of pointLayer.children) {
+            circle.fillColor = fillColor;
+            totalPoint = totalPoint.add(circle.position);
+            console.log(totalPoint);
+        }
+        totalPoint = totalPoint.divide(pointLayer.children.length);
+        centroidLayer.children[0].tweenTo({position : totalPoint}, tweenTime)
+    } else {
+        let totalPoints = Array(centroidLayer.children.length).fill(new paper.Point((0,0)));
+        let numPoints = Array(centroidLayer.children.length).fill(0);
+        let totalDistance = 0;
+        for (const dataPoint of pointLayer.children) {
+            let minDist = Number.MAX_SAFE_INTEGER;
+            let leastIndex = 0;
+            for (const centroid of centroidLayer.children) {
+                // console.log(dataPoint.position);
+                let dist = dataPoint.position.getDistance(centroid.position);
+                if (dist < minDist) {
+                    leastIndex = centroid.index;
+                    minDist = dist;
+                }
+            }
+            totalDistance += minDist;
+            numPoints[leastIndex]++;
+            totalPoints[leastIndex] = totalPoints[leastIndex].add(dataPoint.position);
+            dataPoint.tweenTo({fillColor : centroidLayer.children[leastIndex].strokeColor}, tweenTime);
+            // dataPoint.fillColor = centroidLayer.children[leastIndex].strokeColor;
+        }
+        for (let i = 0; i < totalPoints.length; i++) {
+            if (numPoints[i] !== 0) {
+                totalPoints[i] = totalPoints[i].divide(numPoints[i]);
+            }
+            centroidLayer.children[i].tweenTo({position : totalPoints[i]}, tweenTime);
+        }
+        return totalDistance;
     }
 }
 
