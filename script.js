@@ -8,6 +8,7 @@ const stepButton = window.document.getElementById("step-button");
 const clearButton = document.getElementById("clear-button");
 
 const kmeansInput = document.getElementById("kmeans-input");
+kmeansInput.style.display = 'flex';
 const dbscanInput = document.getElementById("dbscan-input");
 const otherInput = document.getElementById("other-input");
 
@@ -16,7 +17,16 @@ for(const modelButton of modelButtons){
     modelButton.addEventListener('change', doSomething);
 }
 
+window.addEventListener("contextmenu", function(event){
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+});
+
+let currentAlgo = "kmeans";
+
 function doSomething(e) {
+    currentAlgo = e.target.value;
     switch(e.target.value) {
         case "kmeans":
             dbscanInput.style.display = 'none';
@@ -69,35 +79,83 @@ paper.setup('clusterCanvas');
 
 const pointLayer = new paper.Layer();
 
-paper.project.addLayer(pointLayer);
-
 const centroidLayer = new paper.Layer();
 
-paper.project.addLayer(centroidLayer);
+// paper.project.addLayer(pointLayer);
 
-
-console.log(paper.project.layers);
+// paper.project.addLayer(centroidLayer);
 
 
 // clusterPoints.push(new paper.Point(3, 9))
 // console.log(clusterPoints[0])
 addStuff()
 
+let rightClick = false;
+
+var hitOptions = {
+    fill: true, 
+    stroke: true, 
+    segments: true, 
+    tolerance: 20 
+};
+
 
 function addStuff() {
     with (paper) { 
+        pointLayer.activate()
         var tool = new Tool();
         tool.fixedDistance = 20;
         tool.onMouseDown = function(event) {
-            if (!event.modifiers.shift) {
-                var aPoint = new clusterPoint(event.point)
-                clusterPoints.push(aPoint);
+            if(event.event.button === 2) {
+                if (tool.fixedDistance !== 1) {
+                    tool.fixedDistance = 1;
+                }
+                rightClick = true;
+                let pointResult = pointLayer.hitTest(event.point, hitOptions);
+                let centroidResult = centroidLayer.hitTest(event.point);
+                if (pointResult) {
+                    console.log(pointResult.item.index);
+                    pointResult.item.remove();
+                }
+                if (centroidResult) {
+                    centroidResult.item.remove();
+                }
+            } else {
+                if (tool.fixedDistance !== 20) {
+                    tool.fixedDistance = 20;
+                }
+                if (!event.modifiers.shift) {
+                    var aPoint = new clusterPoint(event.point)
+                    clusterPoints.push(aPoint);
+                } else {
+                    if (currentAlgo === "kmeans") {
+                        console.log('hi');
+                        let hitResult = centroidLayer.hitTest(event.point);
+                        if (!hitResult) {
+                            centroids.push(new Centroid(event.point));
+                        }
+                    }
+                }
             }
             // paper.project.activeLayer.insertChild(0, aPoint);
         }
+        tool.onMouseUp = function(event) {
+            rightClick = false;
+        }
         tool.onMouseDrag = function(event) {
-            if (!event.modifiers.shift) {
+            if (!event.modifiers.shift && !rightClick) {
+                console.log(event.event);
                 clusterPoints.push(new clusterPoint(event.point));
+            } else if (!event.modifiers.shift && rightClick) {
+                let pointResult = pointLayer.hitTest(event.point, hitOptions);
+                let centroidResult = centroidLayer.hitTest(event.point);
+                if (pointResult) {
+                    console.log(pointResult.item.index);
+                    pointResult.item.remove();
+                }
+                if (centroidResult) {
+                    centroidResult.item.remove();
+                }
             }
         }
     }
@@ -113,7 +171,16 @@ function togglePlay() {
 }
 
 function step() {
-    addCluster(1);
+    switch(currentAlgo) {
+        case "kmeans":
+            kmeans_step();
+    }
+}
+
+function kmeans_step() {
+    if (centroids.length === 0) {
+
+    }
 }
 
 function removeCluster(amount) {
@@ -146,6 +213,10 @@ function drawLine() {
 
 function clearScreen() {
     with(paper) {
-        project.clear()
+        pointLayer.removeChildren();
+        centroidLayer.removeChildren();
+        clusterPoints = [];
+        centroids = [];
     }
 }
+
