@@ -12,6 +12,9 @@ kmeansInput.style.display = 'flex';
 const dbscanInput = document.getElementById("dbscan-input");
 const otherInput = document.getElementById("other-input");
 
+const epsInput = document.getElementById("eps-input");
+const minPointsInput = document.getElementById("minPoints-input");
+
 const modelButtons = document.querySelectorAll('input[name="clustering_algo"]');
 for(const modelButton of modelButtons){
     modelButton.addEventListener('change', doSomething);
@@ -24,9 +27,18 @@ canvas.addEventListener("contextmenu", function(event){
 });
 
 let currentAlgo = "kmeans";
+let curCore = null;
+let curNeighbors = [];
 
 function doSomething(e) {
+    if (runningKmeans) {
+        clearTimeout(kmeansTimeout);
+        togglePlay();
+    }
     currentAlgo = e.target.value;
+    blackPoints();
+    centroidLayer.removeChildren();
+    centroids = [];
     switch(e.target.value) {
         case "kmeans":
             dbscanInput.style.display = 'none';
@@ -107,6 +119,10 @@ function addStuff() {
         var tool = new Tool();
         tool.fixedDistance = 20;
         tool.onMouseDown = function(event) {
+            if (currentAlgo === "dbscan" && runningDBscan === true) {
+                runAlgo();
+                blackPoints();
+            }
             if(event.event.button === 2) {
                 if (tool.fixedDistance !== 1) {
                     tool.fixedDistance = 1;
@@ -162,32 +178,47 @@ function addStuff() {
     }
 }
 
-let runningAlgo = false;
+let runningKmeans = false;
+let runningDBscan = false;
+let kmeansTimeout = null;
+let dbscanTimeout = null;
 
 function runAlgo() {
     togglePlay();
     switch(currentAlgo) {
         case "kmeans":
-            if (runningAlgo) {
-                runningAlgo = false;
-                clearTimeout(runTimeout);
+            if (runningKmeans) {
+                runningKmeans = false;
+                clearTimeout(kmeansTimeout);
             } else {
+                runningKmeans = true;
                 runKmeans();
+            }
+        case "dbscan":
+            if (runningDBscan) {
+                runningDBscan = false;
+                clearTimeout(dbscanTimeout);
+            } else {
+                runningDBscan = true;
+                runDBScan();
             }
     }
 }
 
 function runKmeans() {
-    runningAlgo = true;
     totalDist = kmeans_step(1000);
-    runTimeout = setTimeout(runKmeans, 1500);
+    kmeansTimeout = setTimeout(runKmeans, 1500);
     if (Math.abs(lastTotalDist - totalDist) < 10) {
-        clearTimeout(runTimeout);
-        runningAlgo = false;
+        clearTimeout(kmeansTimeout);
+        runningKmeans = false;
         togglePlay();
     }
     console.log(Math.abs(lastTotalDist - totalDist));
     lastTotalDist = totalDist;
+}
+
+function runDBScan() {
+
 }
 
 function togglePlay() {
@@ -202,7 +233,13 @@ function togglePlay() {
 function step() {
     switch(currentAlgo) {
         case "kmeans":
+            runningKmeans = true;
             kmeans_step(1000);
+            runningKmeans = false;
+        case "dbscan":
+            runningDBscan = true;
+            dbscan_step(1000, parseInt(epsInput.value), parseInt(minPointsInput.value));
+            runningDBscan = false;
     }
 }
 
@@ -252,6 +289,34 @@ function kmeans_step(tweenTime) {
     }
 }
 
+// Thoughts: each "step" is just one cluster- doing individual points would be a pain
+// While running step, disable point addition/deletion to not mess things up
+
+function dbscan_step(tweenTime, minPoint, EPS) {
+    // if (curCore != null && (typeof(curCore.index) !== "undefined")) {
+
+    // }
+    let unClustered = []
+    for (const dataPoint of pointLayer.children) {
+        if (checkBlack(dataPoint.fillColor)) {
+            unClustered.push(dataPoint);
+        }
+    }
+    for (const dataPoint of unClustered) {
+
+    }
+}
+
+function checkCore(dataPoint, unClustered) {
+    for (const dataPoint of unClustered) {
+
+    }
+}
+
+function checkBlack(color1) {
+    return ((color1[0] === 0) && (color1[1] === 0) && (color1[2] === 0));
+}
+
 function removeCluster(amount) {
     amount = (typeof amount !== 'undefined') ? amount : 1;
     while (amount > 0 && centroids.length > 0) {
@@ -271,6 +336,12 @@ function addCluster(amount) {
 
 }
 
+function blackPoints() {
+    for (const circle of pointLayer.children) {
+        circle.fillColor = "black";
+    }
+}
+
 function drawLine() {
     var path = new paper.Path();
     path.strokeColor = 'black';
@@ -282,6 +353,9 @@ function drawLine() {
 
 function clearScreen() {
     with(paper) {
+        if (running) {
+            runAlgo();
+        }
         pointLayer.removeChildren();
         centroidLayer.removeChildren();
         clusterPoints = [];
