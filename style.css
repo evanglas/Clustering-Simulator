@@ -20,6 +20,10 @@
     height: 100%;
 }
 
+.algo-description {
+    font-size: 12px;
+}
+
 #controls {
     /* padding-right: 20px; */
     /* min-width: 300px; */
@@ -31,7 +35,8 @@
 #modelButtons {
     font-family: "Montserrat", sans-serif;
     font-size: 15px;
-    margin-bottom:  15px;
+    /* margin-top: 10px; */
+    /* margin-bottom:  15px; */
 }
 
 #buttonTitle {
@@ -39,6 +44,7 @@
 }
 
 .model-input {
+    margin-top: 10px;
     font-family: "Montserrat", sans-serif;
 }
 
@@ -58,6 +64,7 @@ canvas {
 
 #model-inputs {
     margin-bottom: 20px;
+    max-width: 400px;
 }
 
 .param-label {
@@ -65,7 +72,7 @@ canvas {
 }
 
 .param-box {
-    padding-bottom: 10px;
+    padding-top: 10px;
 }
 
 body {

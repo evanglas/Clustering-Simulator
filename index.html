@@ -19,30 +19,48 @@
                     <label for="kmeans">K-Means</label><br>
                     <input type="radio" id="dbscan" name="clustering_algo" value="dbscan">
                     <label for="dbscan">DBScan</label><br>
-                    <input type="radio" id="other" name="clustering_algo" value="other">
-                    <label for="other">other</label>
+                    <!-- <input type="radio" id="other" name="clustering_algo" value="other">
+                    <label for="other">other</label> -->
                 </div>
                 <div id="model-inputs">
                     <div class="model-input" id="kmeans-input">
-                        <div class="param-box">
+                        <div id="kmeans-description" class="algo-description">
+                            <ul style="margin: 0px">
+                                <li>Click (and drag) to add datapoints.</li>
+                                <li>Hold shift + click to add centroids.</li>
+                                <li>Right click (and drag) to remove datapoints/centroids.</li>
+                                <li>Press step for one iteration. Press run to run algorithm continously.</li>
+                            </ul>
+                        </div>
+                        <!-- <div class="param-box">
                             <label class="param-label" for="num-clusters"># of Clusters</label>
                             <input id="num-clusters" type="number" min="0" step="1" value="1">
-                        </div>
+                        </div> -->
                     </div>
                     <div class="model-input" id="dbscan-input">
+                        <div id="dbscan-description" class="algo-description">
+                            <ul style="margin: 0px">
+                                <li>Click (and drag) to add datapoints.</li>
+                                <li>Right click (and drag) to remove datapoints</li>
+                                <li>EPS defines the minimum width between points within clusters (see red key at top of canvs for EPS distance).</li>
+                                <li>Min Points defines the minimum number of points within EPS distance around a given point necessary to start forming a cluster.</li>
+                                <li>Press step to form one cluster at a time (or if none exist, to classify outliers). Press run to run algorithm continuously.</li>
+                                <li>Outliers will turn magenta.</li>
+                            </ul>
+                        </div>
                         <div class="param-box">
                             <label class="param-label" for="eps-input">EPS</label>
-                            <input class="param-label" id="eps-input" type="number" value="1">
+                            <input class="param-label" id="eps-input" min="1" type="number" value="22">
                         </div>
                         <div class="param-box">
                             <label class="param-label" for="minPoints-input">Min Points</label>
-                            <input id="minPoints-input" type="number" value="1">
+                            <input id="minPoints-input" type="number" min="1" value="1">
                         </div>
                     </div>
-                    <div class="model-input" id="other-input">
+                    <!-- <div class="model-input" id="other-input">
                         <label class="param-label" for="other-input">Other</label>
                         <input id="other-iput" type="number" min="0" step="1" value="1">
-                    </div>
+                    </div> -->
                 </div>
                 <div id="general-input">
                     <button id="run-button" onclick="runAlgo()">Run</button>
@@ -52,7 +70,8 @@
             </div>
             <canvas id="clusterCanvas" resize="true"></canvas>
         </div>
-        <script type="text/javascript" src="paper.js"></script>
+        <!-- <script type="text/javascript" src="paper.js"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-full.js" integrity="sha512-XV5MGZ7Tv+G60rzU8P7tPUlaf0yz7SJ/uI9CLAwyLcZKl9kzxJQFs3nsBNZVNVAwNOkBLqrzMvjGMEycDccqiA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script type="text/javascript" src="script.js" canvas="clusterCanvas"></script>
         <!-- <script type="text/paperscript" src="paperscript.js" canvas="clusterCanvas"></script> -->
     </body>

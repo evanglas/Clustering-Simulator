@@ -10,7 +10,7 @@ const clearButton = document.getElementById("clear-button");
 const kmeansInput = document.getElementById("kmeans-input");
 kmeansInput.style.display = 'flex';
 const dbscanInput = document.getElementById("dbscan-input");
-const otherInput = document.getElementById("other-input");
+// const otherInput = document.getElementById("other-input");
 
 const epsInput = document.getElementById("eps-input");
 const minPointsInput = document.getElementById("minPoints-input");
@@ -42,44 +42,65 @@ keyLayer.activate()
 
 let epsPath = new paper.Path();
 
-epsPath.strokeColor = "blue";
-epsPath.strokeWidth = 2;
-epsPath.add(new paper.Point(0,10));
-epsPath.add(new paper.Point(0,10));
+epsPath.strokeColor = "red";
+epsPath.opacity = 1;
+epsPath.add(paper.view.center.x - parseInt(epsInput.value) / 2, 20);
+epsPath.add(paper.view.center.x + parseInt(epsInput.value) / 2, 20);
+let leftepsBound = new paper.Path.Circle({
+    center: [paper.view.center.x - parseInt(epsInput.value) / 2, 20],
+    radius: 5,
+    strokeColor: 'red',
+    opacity: 1
+});
+let rightepsBound = new paper.Path.Circle({
+    center: [paper.view.center.x + parseInt(epsInput.value) / 2, 20],
+    radius: 5,
+    strokeColor: 'red',
+    opacity: 1
+})
+
+keyLayer.visible = false;
+
 
 function doSomething(e) {
-    epsPath.remove();
+    // epsPath.remove();
+    keyLayer.visible = false;
     if (runningKmeans) {
         clearTimeout(kmeansTimeout);
         togglePlay();
     }
     currentAlgo = e.target.value;
-    blackPoints();
+    resetDBScan();
     centroidLayer.removeChildren();
     centroids = [];
     switch(e.target.value) {
         case "kmeans":
             dbscanInput.style.display = 'none';
-            otherInput.style.display = 'none';
+            // otherInput.style.display = 'none';
             kmeansInput.style.display = 'flex';
+            kmeansInput.style.flexDirection = 'column';
             break;
         case "dbscan":
             kmeansInput.style.display = 'none';
-            otherInput.style.display = 'none';
+            // otherInput.style.display = 'none';
             dbscanInput.style.display = 'flex';
             dbscanInput.style.flexDirection = 'column';
 
-            keyLayer.addChild(epsPath);
+            // keyLayer.addChild(epsPath);
+            keyLayer.visible = true;
 
             epsInput.addEventListener("input", function(event) {
-                epsPath.segments[1].point.x = parseInt(epsInput.value);
+                epsPath.segments[1].point.x = paper.view.center.x + parseInt(epsInput.value) / 2;
+                epsPath.segments[0].point.x = paper.view.center.x - parseInt(epsInput.value) / 2;
+                rightepsBound.position.x = paper.view.center.x + parseInt(epsInput.value) / 2;
+                leftepsBound.position.x = paper.view.center.x - parseInt(epsInput.value) / 2;
             });
             break;
-        case "other":
-            kmeansInput.style.display = 'none';
-            dbscanInput.style.display = 'none';
-            otherInput.style.display = 'block';
-            break;
+        // case "other":
+        //     kmeansInput.style.display = 'none';
+        //     dbscanInput.style.display = 'none';
+        //     otherInput.style.display = 'block';
+        //     break;
     }
 }
 
@@ -114,13 +135,6 @@ class Centroid {
     }
 }
 
-// paper.project.addLayer(pointLayer);
-
-// paper.project.addLayer(centroidLayer);
-
-
-// clusterPoints.push(new paper.Point(3, 9))
-// console.log(clusterPoints[0])
 addStuff()
 
 let rightClick = false;
@@ -141,9 +155,9 @@ function addStuff() {
         tool.onMouseDown = function(event) {
             if (currentAlgo === "dbscan" && runningDBscan === true) {
                 runAlgo();
-                blackPoints();
+                resetDBScan();
             } else if (currentAlgo === "dbscan") {
-                blackPoints();
+                resetDBScan();
             }
             if(event.event.button === 2) {
                 if (tool.fixedDistance !== 1) {
@@ -205,6 +219,7 @@ let runningDBscan = false;
 let kmeansTimeout = null;
 let dbscanTimeout = null;
 let dbClusterCount = 0;
+let dbscanDone = false;
 
 function runAlgo() {
     togglePlay();
@@ -229,7 +244,7 @@ function runAlgo() {
 }
 
 function runKmeans() {
-    totalDist = kmeans_step(1000);
+    let totalDist = kmeans_step(1000);
     kmeansTimeout = setTimeout(runKmeans, 1500);
     if (Math.abs(lastTotalDist - totalDist) < 10) {
         clearTimeout(kmeansTimeout);
@@ -241,7 +256,12 @@ function runKmeans() {
 }
 
 function runDBScan() {
-
+    console.log('hi')
+    dbscan_step(1000, parseInt(epsInput.value), parseInt(minPointsInput.value));
+    dbscanTimeout = setTimeout(runDBScan, 1500);
+    if (dbscanDone) {
+        clearTimeout(dbscanTimeout);
+    }
 }
 
 function togglePlay() {
@@ -272,12 +292,15 @@ function kmeans_step(tweenTime) {
     if (centroidLayer.children.length === 0) {
         for (const circle of pointLayer.children) {
             circle.fillColor = "black";
+            circle.strokeColor = "black";
         }
     } else if (centroidLayer.children.length === 1) {
         let fillColor = centroidLayer.children[0].strokeColor;
+        let strokeColor = centroidLayer.children[0].strokeColor;
         let totalPoint = new paper.Point(0,0);
         for (const circle of pointLayer.children) {
             circle.fillColor = fillColor;
+            circle.strokeColor = strokeColor;
             totalPoint = totalPoint.add(circle.position);
             console.log(totalPoint);
         }
@@ -301,7 +324,8 @@ function kmeans_step(tweenTime) {
             totalDistance += minDist;
             numPoints[leastIndex]++;
             totalPoints[leastIndex] = totalPoints[leastIndex].add(dataPoint.position);
-            dataPoint.tweenTo({fillColor : centroidLayer.children[leastIndex].strokeColor}, tweenTime);
+            dataPoint.tweenTo({fillColor : centroidLayer.children[leastIndex].strokeColor,
+            strokeColor : centroidLayer.children[leastIndex].strokeColor}, tweenTime);
             // dataPoint.fillColor = centroidLayer.children[leastIndex].strokeColor;
         }
         for (let i = 0; i < totalPoints.length; i++) {
@@ -318,37 +342,39 @@ function kmeans_step(tweenTime) {
 // While running step, disable point addition/deletion to not mess things up
 
 function dbscan_step(tweenTime, eps, minPoints) {
-    // if (curCore != null && (typeof(curCore.index) !== "undefined")) {
-
-    // }
     let unClustered = []
+    dbscanDone = false;
     for (const dataPoint of pointLayer.children) {
         if (checkBlack(dataPoint.fillColor)) {
             unClustered.push(dataPoint);
         }
     }
-    // console.log(unClustered);
-    if (unClustered.length === 0) return;
+    if (unClustered.length === 0) {
+        dbscanDone = true;
+        return;
+    }
     let all_outliers = true;
     for (const dataPoint of unClustered) {
         let reachable = getReachable(dataPoint, unClustered, eps);
-        // console.log(reachable);
         if (reachable.length >= minPoints) {
             all_outliers = false;
             let clusterColor = colors[dbClusterCount % colors.length];
             let cluster = findCluster(dataPoint, unClustered, reachable, eps);
-            for (const clusteredPoint of cluster) {
-                // console.log(clusterColor);
-                animateDBPoint(clusteredPoint, clusterColor, tweenTime);
-            }
+            animateDBPoints(cluster, clusterColor, tweenTime);
             dbClusterCount++;
             return;
         }
     }
     if (all_outliers) {
-        for (const dataPoint of unClustered) {
-            animateDBPoint(dataPoint, "magenta", tweenTime);
-        }
+        animateDBPoints(unClustered, "magenta", tweenTime);
+    }
+}
+
+function animateDBPoints(points, myFillColor, tweenTime) {
+    animateDBPoint(points.pop(), myFillColor, tweenTime);
+    let clusterTimeout = setTimeout(function() {animateDBPoints(points, myFillColor, tweenTime)}, 25);
+    if (points.length == 0) {
+        clearTimeout(clusterTimeout);
     }
 }
 
@@ -382,13 +408,13 @@ function getReachable(dataPoint1, unClustered, eps) {
             }
         }
     }
-    console.log(dataPoint1.position.x + " reaches " + reachable + " of " + unClustered);
+    // console.log(dataPoint1.position.x + " reaches " + reachable + " of " + unClustered);
     return reachable;
 }
 
 function checkBlack(color1) {
     let black = (color1.components[0] === 0) && (color1.components[1] === 0) && (color1.components[2] === 0);
-    console.log(black);
+    // console.log(black);
     return black;
 }
 
@@ -398,10 +424,6 @@ function removeCluster(amount) {
         centroids.pop()
         amount--;
     }
-}
-
-function resetDBScan() {
-    dbClusterCount = 0;
 }
 
 function addCluster(amount) {
@@ -437,10 +459,18 @@ function clearScreen() {
             runAlgo();
         }
         // resetDBScan();
+        resetDBScan();
         pointLayer.removeChildren();
         centroidLayer.removeChildren();
         clusterPoints = [];
         centroids = [];
     }
+}
+
+function resetDBScan() {
+    blackPoints();
+    dbScanDone = false;
+    runningDBscan = false;
+    dbClusterCount = 0;
 }
 
