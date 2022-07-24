@@ -30,7 +30,25 @@ let currentAlgo = "kmeans";
 let curCore = null;
 let curNeighbors = [];
 
+paper.setup('clusterCanvas');
+
+const pointLayer = new paper.Layer();
+
+const centroidLayer = new paper.Layer();
+
+const keyLayer = new paper.Layer();
+
+keyLayer.activate()
+
+let epsPath = new paper.Path();
+
+epsPath.strokeColor = "blue";
+epsPath.strokeWidth = 2;
+epsPath.add(new paper.Point(0,10));
+epsPath.add(new paper.Point(0,10));
+
 function doSomething(e) {
+    epsPath.remove();
     if (runningKmeans) {
         clearTimeout(kmeansTimeout);
         togglePlay();
@@ -50,6 +68,12 @@ function doSomething(e) {
             otherInput.style.display = 'none';
             dbscanInput.style.display = 'flex';
             dbscanInput.style.flexDirection = 'column';
+
+            keyLayer.addChild(epsPath);
+
+            epsInput.addEventListener("input", function(event) {
+                epsPath.segments[1].point.x = parseInt(epsInput.value);
+            });
             break;
         case "other":
             kmeansInput.style.display = 'none';
@@ -70,7 +94,9 @@ class clusterPoint {
         pointLayer.activate();
         this.circle = new paper.Path.Circle(point, 5);
         this.circle.fillColor = 'black';
+        this.circle.strokeColor = 'black';
         this.centroid = null;
+        this.applyMatrix = false;
     }
 }
 
@@ -87,12 +113,6 @@ class Centroid {
         }
     }
 }
-
-paper.setup('clusterCanvas');
-
-const pointLayer = new paper.Layer();
-
-const centroidLayer = new paper.Layer();
 
 // paper.project.addLayer(pointLayer);
 
@@ -121,6 +141,8 @@ function addStuff() {
         tool.onMouseDown = function(event) {
             if (currentAlgo === "dbscan" && runningDBscan === true) {
                 runAlgo();
+                blackPoints();
+            } else if (currentAlgo === "dbscan") {
                 blackPoints();
             }
             if(event.event.button === 2) {
@@ -182,6 +204,7 @@ let runningKmeans = false;
 let runningDBscan = false;
 let kmeansTimeout = null;
 let dbscanTimeout = null;
+let dbClusterCount = 0;
 
 function runAlgo() {
     togglePlay();
@@ -236,10 +259,12 @@ function step() {
             runningKmeans = true;
             kmeans_step(1000);
             runningKmeans = false;
+            break;
         case "dbscan":
             runningDBscan = true;
             dbscan_step(1000, parseInt(epsInput.value), parseInt(minPointsInput.value));
             runningDBscan = false;
+            break;
     }
 }
 
@@ -250,7 +275,7 @@ function kmeans_step(tweenTime) {
         }
     } else if (centroidLayer.children.length === 1) {
         let fillColor = centroidLayer.children[0].strokeColor;
-        let totalPoint = new paper.Point((0,0));
+        let totalPoint = new paper.Point(0,0);
         for (const circle of pointLayer.children) {
             circle.fillColor = fillColor;
             totalPoint = totalPoint.add(circle.position);
@@ -259,7 +284,7 @@ function kmeans_step(tweenTime) {
         totalPoint = totalPoint.divide(pointLayer.children.length);
         centroidLayer.children[0].tweenTo({position : totalPoint}, tweenTime)
     } else {
-        let totalPoints = Array(centroidLayer.children.length).fill(new paper.Point((0,0)));
+        let totalPoints = Array(centroidLayer.children.length).fill(new paper.Point(0,0));
         let numPoints = Array(centroidLayer.children.length).fill(0);
         let totalDistance = 0;
         for (const dataPoint of pointLayer.children) {
@@ -292,7 +317,7 @@ function kmeans_step(tweenTime) {
 // Thoughts: each "step" is just one cluster- doing individual points would be a pain
 // While running step, disable point addition/deletion to not mess things up
 
-function dbscan_step(tweenTime, minPoint, EPS) {
+function dbscan_step(tweenTime, eps, minPoints) {
     // if (curCore != null && (typeof(curCore.index) !== "undefined")) {
 
     // }
@@ -302,19 +327,69 @@ function dbscan_step(tweenTime, minPoint, EPS) {
             unClustered.push(dataPoint);
         }
     }
+    // console.log(unClustered);
+    if (unClustered.length === 0) return;
+    let all_outliers = true;
     for (const dataPoint of unClustered) {
-
+        let reachable = getReachable(dataPoint, unClustered, eps);
+        // console.log(reachable);
+        if (reachable.length >= minPoints) {
+            all_outliers = false;
+            let clusterColor = colors[dbClusterCount % colors.length];
+            let cluster = findCluster(dataPoint, unClustered, reachable, eps);
+            for (const clusteredPoint of cluster) {
+                // console.log(clusterColor);
+                animateDBPoint(clusteredPoint, clusterColor, tweenTime);
+            }
+            dbClusterCount++;
+            return;
+        }
+    }
+    if (all_outliers) {
+        for (const dataPoint of unClustered) {
+            animateDBPoint(dataPoint, "magenta", tweenTime);
+        }
     }
 }
 
-function checkCore(dataPoint, unClustered) {
-    for (const dataPoint of unClustered) {
+function animateDBPoint(dataPoint, myFillColor, tweenTime) {
+    let firstStep = dataPoint.tweenTo({strokeWidth : 15, fillColor : myFillColor, strokeColor : myFillColor}, tweenTime / 2);
+    firstStep.then(function() {
+        dataPoint.tweenTo({strokeWidth : 1}, tweenTime);
+    });
+}
 
+function findCluster(dataPoint1, unClustered, reachable, eps) {
+    let myCluster = [dataPoint1];
+    unClustered.splice(unClustered.indexOf(dataPoint1), 1);
+    for (dataPoint of reachable) {
+        let myReachable = getReachable(dataPoint, unClustered, eps);
+        myCluster = myCluster.concat(findCluster(dataPoint, unClustered, myReachable, eps));
     }
+    return myCluster;
+}
+
+function getReachable(dataPoint1, unClustered, eps) {
+    let reachable = []
+    for (const dataPoint2 of unClustered) {
+        let distance = dataPoint1.position.getDistance(dataPoint2.position);
+        // console.log(distance);
+        if (distance <= eps) {
+            // console.log("hi");
+            if (dataPoint1 !== dataPoint2) {
+                // console.log(distance);
+                reachable.push(dataPoint2)
+            }
+        }
+    }
+    console.log(dataPoint1.position.x + " reaches " + reachable + " of " + unClustered);
+    return reachable;
 }
 
 function checkBlack(color1) {
-    return ((color1[0] === 0) && (color1[1] === 0) && (color1[2] === 0));
+    let black = (color1.components[0] === 0) && (color1.components[1] === 0) && (color1.components[2] === 0);
+    console.log(black);
+    return black;
 }
 
 function removeCluster(amount) {
@@ -323,6 +398,10 @@ function removeCluster(amount) {
         centroids.pop()
         amount--;
     }
+}
+
+function resetDBScan() {
+    dbClusterCount = 0;
 }
 
 function addCluster(amount) {
@@ -339,6 +418,7 @@ function addCluster(amount) {
 function blackPoints() {
     for (const circle of pointLayer.children) {
         circle.fillColor = "black";
+        circle.strokeColor = "black";
     }
 }
 
@@ -356,6 +436,7 @@ function clearScreen() {
         if (running) {
             runAlgo();
         }
+        // resetDBScan();
         pointLayer.removeChildren();
         centroidLayer.removeChildren();
         clusterPoints = [];
