@@ -338,8 +338,7 @@ function kmeans_step(tweenTime) {
     }
 }
 
-// Thoughts: each "step" is just one cluster- doing individual points would be a pain
-// While running step, disable point addition/deletion to not mess things up
+// TODO: fix creation of multiple clusters when step pressed before completion of last step
 
 function dbscan_step(tweenTime, eps, minPoints) {
     let unClustered = []
@@ -414,7 +413,6 @@ function getReachable(dataPoint1, unClustered, eps) {
 
 function checkBlack(color1) {
     let black = (color1.components[0] === 0) && (color1.components[1] === 0) && (color1.components[2] === 0);
-    // console.log(black);
     return black;
 }
 
