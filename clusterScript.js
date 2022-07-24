@@ -232,6 +232,7 @@ function runAlgo() {
                 runningKmeans = true;
                 runKmeans();
             }
+            break;
         case "dbscan":
             if (runningDBscan) {
                 runningDBscan = false;
@@ -240,6 +241,7 @@ function runAlgo() {
                 runningDBscan = true;
                 runDBScan();
             }
+            break;
     }
 }
 
